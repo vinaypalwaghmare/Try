@@ -1,0 +1,31 @@
+Unlike other languages SQL also has two types of keywords 
+
+1.> Reserved keywords 
+2.> User defined keywords 
+
+1.> Reserved keywords                 2.> User defined keywords 
+  CREATE                                   tableName
+  TABLE                                    viewName
+  DESC
+  INSERT INTO VALUES
+  FROM 
+  UPPER/LOWER CASE
+  JOIN ON
+  WHERE
+  DROP
+  DELETE
+  TRUNCATE
+  GROUP BY 
+  HAVING
+  BETWEEN
+  AND
+  SELECT 
+  DISTINCT
+  CONCATE
+  LIMIT
+  ALTER
+  RENAME
+  PIVOT
+  REVERSE
+  COUNT
+
