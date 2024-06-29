@@ -7911,3 +7911,453 @@ insert  into `products`(`productCode`,`productName`,`productLine`,`productScale`
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
 /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- -----------------------------------Answers-------------------------------------------------
+/*
+Q1. SELECT clause with WHERE, AND, DISTINCT, Wild Card (LIKE)
+
+⦁	Fetch the employee number, first name and last name of those employees who are working as Sales Rep reporting to employee with employeenumber 1102 (Refer employee table)
+*/
+USE `classicmodels`;
+SHOW TABLES;
+DESC `employees`;
+SELECT 
+    *
+FROM
+    `employees`;
+    
+SELECT DISTINCT
+    `employeeNumber`, `firstName`, `lastName`
+FROM
+    `employees`
+WHERE
+    `jobTitle` LIKE 'Sales Rep'
+        AND `reportsTo` = 1102;
+-- ---------------------------------------------------------------------------------------------------------------------
+/*
+Q1.1	Show the unique productline values containing the word cars at the end from the products table.
+*/
+
+SELECT 
+    *
+FROM
+    `productlines`;
+-- -----------------
+SELECT DISTINCT
+    (`productLine`)
+FROM
+    `productlines`
+WHERE
+    `productLine` LIKE '%Cars';
+    -- ---------------------------------------------------------------------------------------------------------------------
+/*
+Q2. CASE STATEMENTS for Segmentation
+
+. a. Using a CASE statement, segment customers into three categories based on their country:(Refer Customers table)
+						"North America" for customers from USA or Canada
+                        "Europe" for customers from UK, France, or Germany
+                        "Other" for all remaining countries
+     Select the customerNumber, customerName, and the assigned region as "CustomerSegment".
+*/
+SELECT 
+    `customerNumber`,
+    `customerName`,
+    CASE
+        WHEN `country` = 'USA' OR 'Canada' THEN 'North America'
+        WHEN `country` in ('UK', 'France', 'Germany') THEN 'Europe'
+        ELSE 'Other'
+    END AS `CustomerSegment`
+FROM
+    `customers`;
+
+SELECT 
+    `customerNumber`,
+    `customerName`,
+    CASE
+        WHEN `country` in ('USA', 'Canada') THEN 'North America'
+        WHEN `country` in ('UK', 'France', 'Germany') THEN 'Europe'
+        ELSE 'Other'
+    END AS `CustomerSegment`
+FROM
+    `customers`;
+-- ---------------------------------------------------------------------------------------------------------------------
+/*
+Q3. Group By with Aggregation functions and Having clause, Date and Time functions
+*	Using the OrderDetails table, identify the top 10 products (by productCode) with the
+ highest total order quantity across all orders.
+*/
+-- Aggregation Fuction Sum ()
+select * from  `Orderdetails`;
+ SELECT 
+    `productcode`, SUM(`quantityOrdered`) AS `Total_Ordered`
+FROM
+    `Orderdetails`
+GROUP BY `productCode`
+ORDER BY `Total_Ordered` DESC
+LIMIT 10;
+-- --------------------------------
+-- Having Clause 
+SELECT 
+    `productCode`, SUM(`quantityOrdered`) AS `Total_Ordered`
+FROM
+    `Orderdetails`
+GROUP BY `productCode`
+HAVING SUM(`quantityOrdered`)
+ORDER BY `Total_Ordered` DESC
+LIMIT 10;
+-- ---------------------------------
+/*
+* Company wants to analyse payment frequency by month. 
+Extract the month name from the payment date to count the total number of payments for 
+each month and include only those months with a payment count exceeding 20. 
+Sort the results by total number of payments in descending order.  (Refer Payments table). 
+*/
+select * from `payments` limit 2 ;
+
+SELECT 
+    MONTHNAME(`paymentDate`) AS `Payment_Month`,
+    COUNT(*) AS `Num_Payments`
+FROM 
+    `Payments`
+GROUP BY 
+    `Payment_Month`
+HAVING 
+    `Num_Payments` > 20
+ORDER BY 
+    `Num_Payments` DESC;
+-- ---------------------------------------------------------------------------------------------------------------------
+/*
+Q4. CONSTRAINTS: Primary, key, foreign key, Unique, check, not null, default
+
+Create a new database named and Customers_Orders and add the following tables as per the description
+
+⦁	Create a table named Customers to store customer information. Include the following columns:
+
+customer_id: This should be an integer set as the PRIMARY KEY and AUTO_INCREMENT.
+first_name: This should be a VARCHAR(50) to store the customer's first name.
+last_name: This should be a VARCHAR(50) to store the customer's last name.
+email: This should be a VARCHAR(255) set as UNIQUE to ensure no duplicate email addresses exist.
+phone_number: This can be a VARCHAR(20) to allow for different phone number formats.
+
+Add a NOT NULL constraint to the first_name and last_name columns to ensure they always have a value. 
+*/
+DROP DATABASE IF EXISTS `Customers_Orders`;
+CREATE DATABASE `Customers_Orders`;
+USE `Customers_Orders`;
+DROP TABLE IF EXISTS `Customers`;
+CREATE TABLE `Customers` (
+    `customer_id` INT primary key auto_increment,
+    `first_name` VARCHAR(50) not null,
+    `last_name` VARCHAR(50) not null,
+    `email` VARCHAR(255) unique,
+    `phone_number` VARCHAR(20), check (`phone_number`  like '[0-9][0-9][0-9]-[0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]') -- CHECK (phone_number not like '^[0-9\\+\\-\\(\\)\\.\\s]+$')
+);
+describe `customers_orders`.`Customers`;
+insert into `customers_orders`.`Customers` values (1,'f','l','f.lff@gmail.com',9881247194);
+select * from `customers_orders`.`Customers`;
+insert into `customers_orders`.`Customers` values (2,'f','l','feef.l@gmail.com','gdfdfghihihihihi');
+alter table `customers_orders`.`Customers` add constraint check (phone_number  like '[0-9][0-9][0-9]-[0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]');
+-- ---------------------------------------------------------------------------------------------------------------------
+/* 
+⦁	Create a table named Orders to store information about customer orders. Include the following columns:
+
+order_id: This should be an integer set as the PRIMARY KEY and AUTO_INCREMENT.
+customer_id: This should be an integer referencing the customer_id in the Customers table  (FOREIGN KEY).
+order_date: This should be a DATE data type to store the order date.
+total_amount: This should be a DECIMAL(10,2) to store the total order amount.
+     	*/
+        
+        /*
+Constraints:
+⦁	Set a FOREIGN KEY constraint on customer_id to reference the Customers table.
+⦁	Add a CHECK constraint to ensure the total_amount is always a positive value.
+*/
+
+DROP TABLE IF EXISTS `Orders`;
+CREATE TABLE `Orders` (
+    `order_id` INT PRIMARY KEY AUTO_INCREMENT,
+    `customer_id` INT,
+    `order_date` DATE,
+    `total_amount` DECIMAL(10 , 2 ),
+    CHECK (`total_amount` > 0),
+    FOREIGN KEY (`customer_id`)
+        REFERENCES `Customers` (`customer_id`)
+        ON DELETE CASCADE
+);
+DESC `customers_orders`.`Orders`;
+-- ---------------------------------------------------------------------------------------------------------------------
+/*
+Q5. JOINS
+a. List the top 5 countries (by order count) that Classic Models 
+ships to. (Use the Customers and Orders tables)
+
+*/
+USE classicmodels;
+select * from customers ;
+select * from orders;
+
+SELECT 
+    `country`, COUNT(`orderNumber`) AS `order_count`
+FROM
+    `Customers`
+        INNER JOIN
+    `Orders` ON `Customers`.`customerNumber` = `Orders`.`customerNumber`
+GROUP BY country
+ORDER BY `order_count` DESC limit 5; 
+-- ---------------------------------------------------------------------------------------------------------------------
+/*
+Q6. SELF JOIN
+a. Create a table project with below fields.
+
+⦁	EmployeeID : integer set as the PRIMARY KEY and AUTO_INCREMENT.
+⦁	FullName: varchar(50) with no null values
+⦁	Gender : Values should be only ‘Male’  or ‘Female’
+⦁	ManagerID: integer 
+*/
+DROP TABLE IF EXISTS `project`; 
+CREATE TABLE `project` (
+    `EmployeeID` INT PRIMARY KEY AUTO_INCREMENT,
+    `FullName` VARCHAR(50) NOT NULL,
+    `Gender` VARCHAR(10),
+    CHECK (`Gender` = 'Male' OR `Gender` = 'Female'),
+    `ManagerID` INT
+); 
+DESC `project`;
+truncate table `project`;
+insert into `project` (`FullName`,`Gender`,`ManagerID`) values 
+('Pranaya', 'Male', 3),
+('Priyanka', 'Female', 1),
+('Preety', 'Female', null),
+('Anurag', 'Male', 1),
+('Sambit', 'Male', 1),
+('Rajesh', 'Male', 3),
+('Hina', 'Female', 3);
+SELECT 
+    `p`.`FullName` AS `Manager Name`,
+    `m`.`FullName` AS `Emp Name`
+FROM
+    `project` AS `p`
+        JOIN
+    `project` AS `m` ON `p`.`EmployeeID` = `m`.`ManagerID`
+ORDER BY `Manager Name`;
+-- OR ---
+DROP TABLE IF EXISTS `project_Enum`; 
+CREATE TABLE `project_Enum` (
+    `EmployeeID` INT PRIMARY KEY AUTO_INCREMENT,
+    `FullName` VARCHAR(50) NOT NULL,
+    `Gender` ENUM ('Male' ,'Female') NOT NULL,
+    `ManagerID` INT
+);
+DESC `project_Enum`;
+truncate table `project_Enum`;
+insert into `project_Enum` (`FullName`,`Gender`,`ManagerID`) values 
+('Pranaya', 'Male', 3),
+('Priyanka', 'Female', 1),
+('Preety', 'Female', null),
+('Anurag', 'Male', 1),
+('Sambit', 'Male', 1),
+('Rajesh', 'Male', 3),
+('Hina', 'Female', 3);
+SELECT 
+    `p`.`FullName` AS `Manager Name`,
+    `m`.`FullName` AS `Emp Name`
+FROM
+    `project_Enum` AS `p`
+        JOIN
+    `project_Enum` AS `m` ON `p`.`EmployeeID` = `m`.`ManagerID`
+ORDER BY `Manager Name`;
+-- -- ---------------------------------------------------------------------------------------------------------------------
+/*
+Q7. DDL Commands: Create, Alter, Rename
+a. Create table facility. Add the below fields into it.
+⦁	Facility_ID
+⦁	Name
+⦁	State
+⦁	Country
+i) Alter the table by adding the primary key and auto increment to Facility_ID column.
+ii) Add a new column city after name with data type as varchar 
+which should not accept any null values.
+*/
+drop table if exists `Facility`;
+CREATE TABLE `Facility` (
+    `Facility_ID` INT,
+    `Name` VARCHAR(100),
+    `State` VARCHAR(100),
+    `Country` VARCHAR(100)
+);
+
+alter table `Facility` modify `Facility_ID` int auto_increment primary key ;
+alter table `Facility` add column `City` varchar(100) not null after `Name` ;
+desc `Facility` ;
+-- ---------------------------------------------------------------------------------------------------------------------
+/*Q8. Views in SQL
+a. Create a view named product_category_sales that provides insights into sales performance by product category. This view should include the following information:
+productLine: The category name of the product (from the ProductLines table).
+
+total_sales: The total revenue generated by products within that category (calculated by summing the orderDetails.quantity * orderDetails.priceEach for each product in the category).
+
+number_of_orders: The total number of orders containing products from that category.
+(Hint: Tables to be used: Products, orders, orderdetails and productlines)
+*/
+select * from products;
+select * from orderdetails;
+select * from orders;
+select * from productlines;
+
+CREATE VIEW `product_category_sales` AS
+    SELECT 
+        `pl`.`productline`,
+        SUM(`od`.`quantityOrdered` * `od`.`priceEach`) AS `Total_Sales`,
+        COUNT(DISTINCT `o`.`ordernumber`) AS `Number_of_Orders`
+    FROM
+        `products` `p`
+            JOIN
+        `productlines` `pl` ON `p`.`productLine` = `pl`.`productLine`
+            JOIN
+        `orderdetails` `od` ON `p`.`productCode` = `od`.`productCode`
+            JOIN
+        `orders` `o` ON `o`.`orderNumber` = `od`.`orderNumber`
+    GROUP BY `pl`.`productLine`;
+SELECT 
+    *
+FROM
+    `product_category_sales`; 
+-- ---------------------------------------------------------------------------------------------------------------------
+/*Q9. Stored Procedures in SQL with parameters
+
+a. Create a stored procedure Get_country_payments which takes in year and country as inputs and gives year wise, country wise total amount as an output. Format the total amount 
+to nearest thousand unit (K)
+Tables: Customers, Payments
+*/    
+select * from Customers , payments;
+delimiter //
+create definer = `root`@`localhost` procedure `Get_country_payments` (in ipYear int, in ipCountry varchar(20))
+begin 
+SELECT 
+    YEAR(p.paymentDate) AS Year,
+    c.country,
+    CONCAT(FORMAT(SUM(p.amount)/1000, 0), ' K') AS Total_Amount
+FROM
+    Customers c
+        JOIN
+    payments p ON c.customerNumber = p.customerNumber
+    where YEAR(p.paymentDate) = ipyear and c.country = ipCountry
+GROUP BY 1 , 2;
+end // 
+delimiter ;
+-- ---------------------------------------------------------------------------------------------------------------------
+/* Q10. Window functions - Rank, dense_rank, lead and lag
+
+a) Using customers and orders tables, rank the customers based on their order frequency
+
+*/
+select c.customerName, count(o.orderNumber) as Order_count, 
+dense_rank () over(order by count(o.orderNumber)desc) as Order_freqquency_rnk 
+from customers c join orders o 
+on c.customerNumber = o.customerNumber
+group by 1
+order by 2 desc ;	
+-- b) Calculate year wise, month name wise count of orders and year over year (YoY) percentage change. Format the YoY values in no decimals and show in % sign.
+-- Table: Orders
+select * from customers,orders;
+SELECT YEAR(orderDate) AS Year , MONTHNAME(orderDate) AS Month , COUNT(orderNumber) AS Total_Orders, 
+CONCAT(ROUND(((COUNT(orderNumber) - LAG(count(orderNumber),1) OVER()) / LAG(count(orderNumber), 1) OVER())*100), '%') AS '% YoY Change'
+FROM orders
+GROUP BY 1 ,2 ; 
+-- ---------------------------------------------------------------------------------------------------------------------
+/*Q11.Subqueries and their applications
+a. Find out how many product lines are there for which the buy price value is greater than the average of buy price value. Show the output as product line and its count.
+*/
+SELECT * FROM PRODUCTS;
+SELECT 
+    productLine, COUNT(*) AS Total
+FROM
+    products
+WHERE
+    buyprice > (SELECT 
+            AVG(BUYPRICE)
+        FROM
+            products)
+GROUP BY 1
+ORDER BY 2 DESC;
+-- ---------------------------------------------------------------------------------------------------------------------
+/*
+Q12. ERROR HANDLING in SQL
+      Create the table Emp_EH. Below are its fields.
+⦁	EmpID (Primary Key)
+⦁	EmpName
+⦁	EmailAddress
+Create a procedure to accept the values for the columns in Emp_EH. Handle the error using exception handling concept. Show the message as “Error occurred” in case of anything wrong.
+*/
+drop table if exists `Emp_EH`;
+CREATE TABLE `Emp_EH` (
+    `EmpID` INT PRIMARY KEY,
+    `EmpName` VARCHAR(100) NOT NULL,
+    `EmailAddress` VARCHAR(100) NOT NULL
+);
+drop procedure `Proc_Emp_EH`;
+delimiter // 
+create definer = `root`@`localhost` procedure `Proc_Emp_EH` (in `inEMpID` int, in `inEmpName` varchar(100),  in `inEmailAdd` varchar(100))
+BEGIN
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+		begin
+        SELECT 'An error occurred while inserting the customer.' AS ErrorMessage;
+			
+		end;
+   
+    INSERT INTO `Emp_EH` (`EMpID`, `EmpName`, `EmailAddress`)
+			VALUES (`inEMpID`, `inEmpName`, `inEmailAdd`);
+
+    END
+// 
+delimiter ;
+call `Proc_Emp_EH`(101,null,'a');
+select * from `emp_eh`;
+-- ---------------------------------------------------------------------------------------------------------------------
+/* Q13. TRIGGERS
+Create the table Emp_BIT. Add below fields in it.
+Name, Occupation, Working_date, Working_hours
+
+Insert the data as shown in below query.
+INSERT INTO Emp_BIT VALUES
+('Robin', 'Scientist', '2020-10-04', 12),  
+('Warner', 'Engineer', '2020-10-04', 10),  
+('Peter', 'Actor', '2020-10-04', 13),  
+('Marco', 'Doctor', '2020-10-04', 14),  
+('Brayden', 'Teacher', '2020-10-04', 12),  
+('Antonio', 'Business', '2020-10-04', 11);  
+ 
+Create before insert trigger to make sure any new value of Working_hours, if it is negative, then it should be inserted as positive.
+*/
+
+drop table if exists `Emp_BIT`;
+CREATE TABLE `Emp_BIT` (
+    `Name` VARCHAR(100),
+    `Occupation` VARCHAR(100),
+    `Working_date` DATE,
+    `working_hour` INT
+);
+drop trigger if exists `emp_bit_BEFORE_INSERT`;
+DELIMITER //
+CREATE DEFINER=`root`@`localhost` TRIGGER `emp_bit_BEFORE_INSERT` BEFORE INSERT ON `emp_bit` FOR EACH ROW BEGIN
+IF NEW.working_hour < 0 THEN
+        SET NEW.working_hour = ABS(NEW.working_hour);
+    END IF;
+END// 
+DELIMITER ;
+-- ----------------
+
+insert into `Emp_BIT`values 
+('Robin', 'Scientist', '2020-10-04', 12),
+('Warner', 'Engineer', '2020-10-04', 10),
+('Peter', 'Actor', '2020-10-04', 13),
+('Marco', 'Doctor', '2020-10-04', 14),
+('Brayden', 'Teacher', '2020-10-04', 12),
+('Antonio', 'Business', '2020-10-04', 11);
+
+insert into `Emp_BIT`values 
+('Robinhood', 'Scientist', '2020-10-04', -12);
+
+select* from `emp_bit`;
+
